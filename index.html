@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+
+<html>
+ <head>
+  <title> bathstudent.com news </title>
+
+  <meta charset="utf-8">
+
+  <!-- jquery mobile -->
+  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0rc1/jquery.mobile-1.0rc1.min.css" />
+  <script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+  <script src="http://code.jquery.com/mobile/1.0rc1/jquery.mobile-1.0rc1.min.js"></script>
+
+  <!-- jquery templating - now deprecated but no replacement yet. See https://github.com/jquery/jquery-tmpl -->
+  <script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"></script>
+
+  <script src="https://raw.github.com/rmm5t/jquery-timeago/master/jquery.timeago.js"></script>
+
+  <!-- mobile layout -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes"/><!-- makes it full screen -->
+
+  <style>
+    .ui-header .ui-title {
+      margin: .6em 40px .8em 40px;
+    }
+    .ui-li-aside {
+      width: 25%;
+    }
+    p.ui-li-desc {
+      white-space: normal;
+    }
+  </style>
+
+<!-- content sources -->
+<!--
+http://fulltextrssfeed.com/www.bathstudent.com/news/rss/6003/ (most recent 5, full text)
+http://viewtext.org/api/text?url=http://www.bathstudent.com/news/rss/6003
+
+google reader full content for individual item:
+http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:reader/item/e2ac40c46172c956
+-->
+
+ </head>
+
+ <body>
+
+    <script id="newsItemTemplate" type="text/x-jquery-tmpl">
+      <li><a href="#showNewsItem">
+        <h3>${title}</h3>
+        <p>${summary}</p>
+        <!-- <p class="ui-li-aside timeago" title="${updated}">${updated}</p> -->
+      </a></li>
+    </script>
+
+    <script>
+        function ISODateString(d){
+         function pad(n){return n<10 ? '0'+n : n}
+         return d.getUTCFullYear()+'-'
+              + pad(d.getUTCMonth()+1)+'-'
+              + pad(d.getUTCDate())+'T'
+              + pad(d.getUTCHours())+':'
+              + pad(d.getUTCMinutes())+':'
+              + pad(d.getUTCSeconds())+'Z'
+        }
+
+
+        function date_sorter(a, b) {
+            return new Date(b.updated * 1000).getTime() - new Date(a.updated * 1000).getTime();
+        }
+
+        $(document).ready(function(){
+
+            // use viewtext.org to retrieve full text from the articles bathstudent links to
+            // then use google reader to convert it to JSON for us
+            // google reader accepts parameters n=x and full=true/false for # of items to retrieve and whether to include full content
+            // we must use callback=? in order to bypass the JSON single-domain policy
+            url = "http://www.google.com/reader/public/javascript/feed/http%3A%2F%2Fviewtext.org%2Fapi%2Ftext%3Furl%3Dhttp%3A%2F%2Fwww.bathstudent.com%2Fnews%2Frss%2F6003?n=20&full=false&callback=?";
+
+            //$.getJSON("http://viewtext.org/api/text?url=" + url + "&format=json&callback=?",
+            $.getJSON(url, function (data) {
+                data.items.sort(date_sorter);
+
+                $('#results').empty();
+                $.each(data.items, function(i, newsItem) {
+                    //var d = new Date(newsItem.updated * 1000);
+                    //newsItem.updated = ISODateString(d);
+                    newsItem.summary = newsItem.summary.substring(0,100)+'...';
+                    $("#newsItemTemplate").tmpl(newsItem).appendTo('#results');
+                    //$("#results").append('<li><a href=""><h3>'+item.title+'</h3</a></li>');
+                });
+                //$(".timeago").timeago();
+                $('#results').listview('refresh');
+                //$("#resultLog").html(data.content);
+            });
+         });
+    </script>
+
+    <div data-role="page" id="indexPage">
+
+        <div data-role="header" data-theme="b">
+            <h1>bathstudent news and events</h1>
+        </div>
+
+        <div data-role="content" data-theme="b" data-content-theme="b">
+            <ul id="results" data-role="listview" data-theme="c" data-dividertheme="c" data-counttheme="d">
+
+            </ul>
+        </div>
+
+        <div data-role="footer" class="ui-bar" data-theme="b">
+            <div data-role="controlgroup" data-type="horizontal">
+                <a href="index.html">News</a>
+                <a href="index.html">Events</a>
+                <a href="index.html">Links</a>
+            </div>
+        </div>
+    </div>
+
+
+ </body>
+</html>
