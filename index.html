@@ -17,6 +17,9 @@
   <!-- jquery plugin for putting x seconds/minutes/days/etc ago. probably shouldn't be linking to github like this! -->
   <script src="https://raw.github.com/rmm5t/jquery-timeago/master/jquery.timeago.js"></script>
 
+  <!-- script for doing client-side storage. another github hotlink. another few kb of JS! -->
+  <script src="https://raw.github.com/marcuswestin/store.js/master/store+json2.min.js"></script>
+
   <!-- mobile layout -->
   <meta name="HandheldFriendly" content="True">
   <meta name="MobileOptimized" content="320">
@@ -49,7 +52,7 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
  <body>
 
     <script id="newsItemTemplate" type="text/x-jquery-tmpl">
-      <li><a href="#newsItem?id=${id}">
+      <li><a href="?id=${id}#newsItem">
         <h3>${title}</h3>
         <p>${summary}</p>
         <!-- <p class="ui-li-aside timeago" title="${updated}">${updated}</p> -->
@@ -68,31 +71,64 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
         }
 
 
+        // sort news items most recently updated first
         function date_sorter(a, b) {
             return new Date(b.updated * 1000).getTime() - new Date(a.updated * 1000).getTime();
         }
 
+        function displayData(newsFeed) {
+            newsFeed.items.sort(date_sorter); //sort news items chronologically
+
+            $('#results').empty();
+            $.each(newsFeed.items, function(i, newsItem) {
+                //var d = new Date(newsItem.updated * 1000); // convert from seconds to millis
+                //newsItem.updated = ISODateString(d);
+                newsItem.summary = newsItem.summary.substring(0, 100)+'...'; // trim to 100ish characters
+                $("#newsItemTemplate").tmpl(newsItem).appendTo('#results');
+            });
+
+            //$(".timeago").timeago();
+            $('#results').listview('refresh');
+        }
+
         $(document).ready(function(){
 
-            // use viewtext.org to retrieve full text from the articles bathstudent links to
-            // then use google reader to convert it to JSON for us
-            // google reader accepts parameters n=x and full=true/false for # of items to retrieve and whether to include full content
-            // we must use callback=? in order to bypass the JSON single-domain policy
-            url = "http://www.google.com/reader/public/javascript/feed/http%3A%2F%2Fviewtext.org%2Fapi%2Ftext%3Furl%3Dhttp%3A%2F%2Fwww.bathstudent.com%2Fnews%2Frss%2F6003?n=20&full=false&callback=?";
+            //store.clear(); // shut. down. EVERYTHING.
 
-            $.getJSON(url, function (data) {
-                data.items.sort(date_sorter);
+            var ONE_HOUR = 3600000; // milliseconds
 
-                $('#results').empty();
-                $.each(data.items, function(i, newsItem) {
-                    //var d = new Date(newsItem.updated * 1000); // convert from seconds to millis
-                    //newsItem.updated = ISODateString(d);
-                    newsItem.summary = newsItem.summary.substring(0,100)+'...';
-                    $("#newsItemTemplate").tmpl(newsItem).appendTo('#results');
+            var newsFeedTimestamp = store.get("newsFeedTimestamp");
+
+            if(newsFeedTimestamp != undefined) {
+                newsFeedAge = (new Date().getTime()) - newsFeedTimestamp;
+                console.log(newsFeedAge);
+                if (newsFeedAge > ONE_HOUR) {
+                    store.remove("newsFeed");
+                }
+            }
+
+            var newsFeed = store.get("newsFeed");
+
+            console.log(newsFeed);
+
+            if(newsFeed == undefined) {
+
+                // use viewtext.org to retrieve full text from the articles bathstudent links to
+                // then use google reader to convert it to JSON for us
+                // google reader accepts parameters n=x and full=true/false for # of items to retrieve and whether to include full content
+                // we must use callback=? in order to bypass the JSON single-domain policy
+                url = "http://www.google.com/reader/public/javascript/feed/http%3A%2F%2Fviewtext.org%2Fapi%2Ftext%3Furl%3Dhttp%3A%2F%2Fwww.bathstudent.com%2Fnews%2Frss%2F6003?n=20&full=false&callback=?";
+
+                $.getJSON(url, function(newsFeed) {
+                    console.log("fetched feed");
+                    store.set("newsFeed", newsFeed);
+                    store.set("newsFeedTimestamp", new Date().getTime());
+                    displayData(newsFeed);
                 });
-                //$(".timeago").timeago();
-                $('#results').listview('refresh');
-            });
+            } else {
+                displayData(newsFeed);
+            }
+
          });
     </script>
 
@@ -118,7 +154,18 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
     </div>
 
     <div data-role="page" id="newsItem">
+        <div data-role="header">
+            <h1>Bar</h1>
+        </div><!-- /header -->
 
+        <div data-role="content">
+            <p>I'm first in the source order so I'm shown as the page.</p>
+            <p><a href="#foo">Back to foo</a></p>
+        </div><!-- /content -->
+
+        <div data-role="footer">
+            <h4>Page Footer</h4>
+        </div>
     </div>
 
  </body>
