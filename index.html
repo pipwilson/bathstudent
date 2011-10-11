@@ -14,6 +14,7 @@
   <!-- jquery templating - now deprecated but no replacement yet. See https://github.com/jquery/jquery-tmpl -->
   <script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"></script>
 
+  <!-- jquery plugin for putting x seconds/minutes/days/etc ago. probably shouldn't be linking to github like this! -->
   <script src="https://raw.github.com/rmm5t/jquery-timeago/master/jquery.timeago.js"></script>
 
   <!-- mobile layout -->
@@ -48,7 +49,7 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
  <body>
 
     <script id="newsItemTemplate" type="text/x-jquery-tmpl">
-      <li><a href="#showNewsItem">
+      <li><a href="#newsItem?id=${id}">
         <h3>${title}</h3>
         <p>${summary}</p>
         <!-- <p class="ui-li-aside timeago" title="${updated}">${updated}</p> -->
@@ -79,26 +80,23 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
             // we must use callback=? in order to bypass the JSON single-domain policy
             url = "http://www.google.com/reader/public/javascript/feed/http%3A%2F%2Fviewtext.org%2Fapi%2Ftext%3Furl%3Dhttp%3A%2F%2Fwww.bathstudent.com%2Fnews%2Frss%2F6003?n=20&full=false&callback=?";
 
-            //$.getJSON("http://viewtext.org/api/text?url=" + url + "&format=json&callback=?",
             $.getJSON(url, function (data) {
                 data.items.sort(date_sorter);
 
                 $('#results').empty();
                 $.each(data.items, function(i, newsItem) {
-                    //var d = new Date(newsItem.updated * 1000);
+                    //var d = new Date(newsItem.updated * 1000); // convert from seconds to millis
                     //newsItem.updated = ISODateString(d);
                     newsItem.summary = newsItem.summary.substring(0,100)+'...';
                     $("#newsItemTemplate").tmpl(newsItem).appendTo('#results');
-                    //$("#results").append('<li><a href=""><h3>'+item.title+'</h3</a></li>');
                 });
                 //$(".timeago").timeago();
                 $('#results').listview('refresh');
-                //$("#resultLog").html(data.content);
             });
          });
     </script>
 
-    <div data-role="page" id="indexPage">
+    <div data-role="page" id="newsIndex">
 
         <div data-role="header" data-theme="b">
             <h1>bathstudent news and events</h1>
@@ -119,6 +117,9 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
         </div>
     </div>
 
+    <div data-role="page" id="newsItem">
+
+    </div>
 
  </body>
 </html>
