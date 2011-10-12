@@ -51,6 +51,7 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
 
  <body>
 
+    <!-- template for a list item, using the jquery.tmpl plugin -->
     <script id="newsItemTemplate" type="text/x-jquery-tmpl">
       <li><a href="?id=${id}#newsItem">
         <h3>${title}</h3>
@@ -76,6 +77,7 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
             return new Date(b.updated * 1000).getTime() - new Date(a.updated * 1000).getTime();
         }
 
+        // add the items in the feed to the page
         function displayData(newsFeed) {
             newsFeed.items.sort(date_sorter); //sort news items chronologically
 
@@ -101,15 +103,12 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
 
             if(newsFeedTimestamp != undefined) {
                 newsFeedAge = (new Date().getTime()) - newsFeedTimestamp;
-                console.log(newsFeedAge);
                 if (newsFeedAge > ONE_HOUR) {
                     store.remove("newsFeed");
                 }
             }
 
             var newsFeed = store.get("newsFeed");
-
-            console.log(newsFeed);
 
             if(newsFeed == undefined) {
 
@@ -120,7 +119,6 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
                 url = "http://www.google.com/reader/public/javascript/feed/http%3A%2F%2Fviewtext.org%2Fapi%2Ftext%3Furl%3Dhttp%3A%2F%2Fwww.bathstudent.com%2Fnews%2Frss%2F6003?n=20&full=false&callback=?";
 
                 $.getJSON(url, function(newsFeed) {
-                    console.log("fetched feed");
                     store.set("newsFeed", newsFeed);
                     store.set("newsFeedTimestamp", new Date().getTime());
                     displayData(newsFeed);
