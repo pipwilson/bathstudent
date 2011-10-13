@@ -1,1 +1,1 @@
-Intended to be a simple, self-contained jQuery Mobile application.
+Intended to be a simple, self-contained jQuery Mobile application. 
