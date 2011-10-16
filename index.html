@@ -56,21 +56,11 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
       <li><a href="newsItem.html?id=${id}">
         <h3>${title}</h3>
         <p>${summary}</p>
-        <!-- <p class="ui-li-aside timeago" title="${updated}">${updated}</p> -->
+        <p class="ui-li-aside timeago" title="${updated}">${updated}</p>
       </a></li>
     </script>
 
     <script>
-        function ISODateString(d){
-         function pad(n){return n<10 ? '0'+n : n}
-         return d.getUTCFullYear()+'-'
-              + pad(d.getUTCMonth()+1)+'-'
-              + pad(d.getUTCDate())+'T'
-              + pad(d.getUTCHours())+':'
-              + pad(d.getUTCMinutes())+':'
-              + pad(d.getUTCSeconds())+'Z'
-        }
-
 
         // sort news items most recently updated first
         function date_sorter(a, b) {
@@ -83,23 +73,25 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
 
             $('#results').empty();
             $.each(newsFeed.items, function(i, newsItem) {
-                //var d = new Date(newsItem.updated * 1000); // convert from seconds to millis
-                //newsItem.updated = ISODateString(d); // some clients have d.toISOString() - which?
+                var d = new Date(newsItem.updated * 1000); // convert from seconds to millis
+                newsItem.updated = d.toISOString();
                 newsItem.summary = newsItem.summary.substring(0, 100)+'...'; // trim to 100ish characters
                 $("#newsItemTemplate").tmpl(newsItem).appendTo('#results');
             });
 
-            //$(".timeago").timeago();
+            // convert timestamps in the page to "x seconds/minutes/etc. ago"
+            $(".timeago").timeago();
+
+            // redraw the listview
             $('#results').listview('refresh');
         }
 
         $('#newsItem').live('pageload', function(event, data) {
-        console.log("yay");
+            console.log("yay");
             console.log(data.options);
         });
 
         $('#newsIndex').live('pageinit', function(event) {
-
 
             //store.clear(); // shut. down. EVERYTHING.
 
@@ -107,6 +99,7 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
 
             var newsFeedTimestamp = store.get("newsFeedTimestamp");
 
+            // if we have a stored timestamp and it is over an hour old, then delete the stored newsFeed
             if(newsFeedTimestamp !== undefined) {
                 newsFeedAge = (new Date().getTime()) - newsFeedTimestamp;
                 if (newsFeedAge > ONE_HOUR) {
@@ -116,6 +109,7 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
 
             var newsFeed = store.get("newsFeed");
 
+            // if there isn't a stored newsfeed, then get the feed, store it and store the timestamp of retrieval
             if(newsFeed == undefined) {
 
                 // use viewtext.org to retrieve full text from the articles bathstudent links to
@@ -127,11 +121,11 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
                 $.getJSON(url, function(newsFeed) {
                     store.set("newsFeed", newsFeed);
                     store.set("newsFeedTimestamp", new Date().getTime());
-                    displayData(newsFeed);
                 });
-            } else {
-                displayData(newsFeed);
             }
+
+            // display the list of news items
+            displayData(newsFeed);
 
          });
     </script>
