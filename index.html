@@ -53,7 +53,7 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
 
     <!-- template for a list item, using the jquery.tmpl plugin -->
     <script id="newsItemTemplate" type="text/x-jquery-tmpl">
-      <li><a href="?id=${id}#newsItem">
+      <li><a href="newsItem.html?id=${id}">
         <h3>${title}</h3>
         <p>${summary}</p>
         <!-- <p class="ui-li-aside timeago" title="${updated}">${updated}</p> -->
@@ -84,7 +84,7 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
             $('#results').empty();
             $.each(newsFeed.items, function(i, newsItem) {
                 //var d = new Date(newsItem.updated * 1000); // convert from seconds to millis
-                //newsItem.updated = ISODateString(d);
+                //newsItem.updated = ISODateString(d); // some clients have d.toISOString() - which?
                 newsItem.summary = newsItem.summary.substring(0, 100)+'...'; // trim to 100ish characters
                 $("#newsItemTemplate").tmpl(newsItem).appendTo('#results');
             });
@@ -93,7 +93,13 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
             $('#results').listview('refresh');
         }
 
-        $(document).ready(function(){
+        $('#newsItem').live('pageload', function(event, data) {
+        console.log("yay");
+            console.log(data.options);
+        });
+
+        $('#newsIndex').live('pageinit', function(event) {
+
 
             //store.clear(); // shut. down. EVERYTHING.
 
@@ -101,7 +107,7 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
 
             var newsFeedTimestamp = store.get("newsFeedTimestamp");
 
-            if(newsFeedTimestamp != undefined) {
+            if(newsFeedTimestamp !== undefined) {
                 newsFeedAge = (new Date().getTime()) - newsFeedTimestamp;
                 if (newsFeedAge > ONE_HOUR) {
                     store.remove("newsFeed");
@@ -116,7 +122,7 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
                 // then use google reader to convert it to JSON for us
                 // google reader accepts parameters n=x and full=true/false for # of items to retrieve and whether to include full content
                 // we must use callback=? in order to bypass the JSON single-domain policy
-                url = "http://www.google.com/reader/public/javascript/feed/http%3A%2F%2Fviewtext.org%2Fapi%2Ftext%3Furl%3Dhttp%3A%2F%2Fwww.bathstudent.com%2Fnews%2Frss%2F6003?n=20&full=false&callback=?";
+                url = "http://www.google.com/reader/public/javascript/feed/http%3A%2F%2Fviewtext.org%2Fapi%2Ftext%3Furl%3Dhttp%3A%2F%2Fwww.bathstudent.com%2Fnews%2Frss%2F6003?n=5&full=false&callback=?";
 
                 $.getJSON(url, function(newsFeed) {
                     store.set("newsFeed", newsFeed);
@@ -148,21 +154,6 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
                 <a href="index.html">Events</a>
                 <a href="index.html">Links</a>
             </div>
-        </div>
-    </div>
-
-    <div data-role="page" id="newsItem">
-        <div data-role="header">
-            <h1>Bar</h1>
-        </div><!-- /header -->
-
-        <div data-role="content">
-            <p>I'm first in the source order so I'm shown as the page.</p>
-            <p><a href="#foo">Back to foo</a></p>
-        </div><!-- /content -->
-
-        <div data-role="footer">
-            <h4>Page Footer</h4>
         </div>
     </div>
 
