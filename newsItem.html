@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+
+<html>
+ <head>
+  <title> bathstudent.com news </title>
+
+  <meta charset="utf-8">
+
+  <!-- jquery mobile -->
+  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0rc1/jquery.mobile-1.0rc1.min.css" />
+  <script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+  <script src="http://code.jquery.com/mobile/1.0rc1/jquery.mobile-1.0rc1.min.js"></script>
+
+  <!-- jquery templating - now deprecated but no replacement yet. See https://github.com/jquery/jquery-tmpl -->
+  <script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"></script>
+
+  <!-- jquery plugin for putting x seconds/minutes/days/etc ago. probably shouldn't be linking to github like this! -->
+  <script src="https://raw.github.com/rmm5t/jquery-timeago/master/jquery.timeago.js"></script>
+
+  <!-- mobile layout -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes"/><!-- makes it full screen -->
+
+  <style>
+    .ui-header .ui-title {
+      margin: .6em 40px .8em 40px;
+    }
+    .ui-li-aside {
+      width: 25%;
+    }
+    p.ui-li-desc {
+      white-space: normal;
+    }
+  </style>
+
+ </head>
+
+ <body>
+
+    <!-- template for a news item, using the jquery.tmpl plugin -->
+    <script id="newsItemTemplate" type="text/x-jquery-tmpl">
+        <h3>${title}</h3>
+        <p class="ui-li-aside timeago" title="${updated}">${updated}</p>
+        <p>${summary}</p>
+
+    </script>
+
+    <script>
+
+
+        // add the items in the feed to the page
+        function displayData(newsFeed) {
+            $("#newsItemTemplate").tmpl(newsItem).appendTo('#newsItem');
+        }
+
+        function getUrlVars() {
+            var vars = [], hash;
+            var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+            for(var i = 0; i < hashes.length; i++)
+            {
+                hash = hashes[i].split('=');
+                vars.push(hash[0]);
+                vars[hash[0]] = hash[1];
+            }
+            return vars;
+        }
+
+        //$(document).ready(function(){
+        $('#newsItem').live('pageshow', function(event) {
+
+            var newsItemId = getUrlVars()["id"];
+
+            if(newsItemId != undefined) {
+
+                // use viewtext.org to retrieve full text from the articles bathstudent links to
+                // then use google reader to convert it to JSON for us
+                // google reader accepts parameters n=x and full=true/false for # of items to retrieve and whether to include full content
+                // we must use callback=? in order to bypass the JSON single-domain policy
+                url  = "http://pipes.yahoo.com/pipes/pipe.run?_id=332d9216d8910ba39e6c2577fd321a6a&_render=json&u=http%3A%2F%2Fwww.google.com%2Freader%2Fapi%2F0%2Fstream%2Fitems%2Fcontents%3Fi%3D"+newsItemId+"&_callback=?"
+                //url = "http://www.google.com/reader/api/0/stream/items/contents?i="+newsItemId+"&callback=?";
+
+                $.getJSON(url, function(newsItem) {
+                    console.log("finished");
+                    displayData(newsItem);
+                });
+            } else {
+                // displayError(newsFeed);
+            }
+
+         });
+
+    </script>
+
+    <div data-role="page" id="newsItem">
+        <div data-role="header" data-theme="b">
+            <h1>News item</h1>
+            <a href="index.html" data-icon="home" data-iconpos="notext" data-direction="reverse" data-ajax="false">Home</a>
+        </div><!-- /header -->
+
+        <div data-role="content" id="newsItem">
+
+        </div><!-- /content -->
+
+        <div data-role="footer" data-theme="b">
+            <h4>Page Footer</h4>
+        </div>
+    </div>
+
+  </body>
+</html>

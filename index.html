@@ -15,7 +15,7 @@
   <script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"></script>
 
   <!-- jquery plugin for putting x seconds/minutes/days/etc ago. probably shouldn't be linking to github like this! -->
-  <script src="https://raw.github.com/rmm5t/jquery-timeago/master/jquery.timeago.js"></script>
+  <!-- <script src="https://raw.github.com/rmm5t/jquery-timeago/master/jquery.timeago.js"></script> -->
 
   <!-- script for doing client-side storage. another github hotlink. another few kb of JS! -->
   <script src="https://raw.github.com/marcuswestin/store.js/master/store+json2.min.js"></script>
@@ -33,7 +33,7 @@
     .ui-li-aside {
       width: 25%;
     }
-    p.ui-li-desc {
+    .ui-li-heading, p.ui-li-desc {
       white-space: normal;
     }
   </style>
@@ -56,7 +56,7 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
       <li><a href="newsItem.html?id=${id}">
         <h3>${title}</h3>
         <p>${summary}</p>
-        <p class="ui-li-aside timeago" title="${updated}">${updated}</p>
+        <!-- <p class="ui-li-aside timeago" title="${updated}">${updated}</p> -->
       </a></li>
     </script>
 
@@ -73,25 +73,27 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
 
             $('#results').empty();
             $.each(newsFeed.items, function(i, newsItem) {
-                var d = new Date(newsItem.updated * 1000); // convert from seconds to millis
-                newsItem.updated = d.toISOString();
-                newsItem.summary = newsItem.summary.substring(0, 100)+'...'; // trim to 100ish characters
+
+                // convert the updated field to support for "x days ago"
+                //var d = new Date(newsItem.updated * 1000); // convert from seconds to millis
+                //newsItem.updated = d.toISOString();
+
+                newsItem.summary = newsItem.summary.substring(0, 80)+'...'; // trim to 100ish characters
                 $("#newsItemTemplate").tmpl(newsItem).appendTo('#results');
             });
 
-            // convert timestamps in the page to "x seconds/minutes/etc. ago"
-            $(".timeago").timeago();
+            // convert timestamps in the page to "x days ago"
+            // $(".timeago").timeago();
 
             // redraw the listview
             $('#results').listview('refresh');
         }
 
-        $('#newsItem').live('pageload', function(event, data) {
-            console.log("yay");
-            console.log(data.options);
-        });
 
-        $('#newsIndex').live('pageinit', function(event) {
+        //$('#newsIndex').live('pageInit', function(event) {
+        //$(document).ready(function(){
+        $('#newsIndex').live('pageshow', function(event) {
+
 
             //store.clear(); // shut. down. EVERYTHING.
 
@@ -108,24 +110,29 @@ http://www.google.com/reader/api/0/stream/items/contents?i=tag:google.com,2005:r
             }
 
             var newsFeed = store.get("newsFeed");
+            console.log(newsFeed);
 
             // if there isn't a stored newsfeed, then get the feed, store it and store the timestamp of retrieval
-            if(newsFeed == undefined) {
+            if(newsFeed === undefined) {
 
                 // use viewtext.org to retrieve full text from the articles bathstudent links to
-                // then use google reader to convert it to JSON for us
+                // then use google reader to convert it to JSON for us.
                 // google reader accepts parameters n=x and full=true/false for # of items to retrieve and whether to include full content
                 // we must use callback=? in order to bypass the JSON single-domain policy
                 url = "http://www.google.com/reader/public/javascript/feed/http%3A%2F%2Fviewtext.org%2Fapi%2Ftext%3Furl%3Dhttp%3A%2F%2Fwww.bathstudent.com%2Fnews%2Frss%2F6003?n=5&full=false&callback=?";
 
-                $.getJSON(url, function(newsFeed) {
-                    store.set("newsFeed", newsFeed);
+                $.getJSON(url, function(data) {
+                    store.set("newsFeed", data);
                     store.set("newsFeedTimestamp", new Date().getTime());
-                });
+                })
+                .complete(function() { displayData(store.get("newsFeed")) });
+
+            } else {
+                // display the list of news items
+                displayData(newsFeed);
             }
 
-            // display the list of news items
-            displayData(newsFeed);
+
 
          });
     </script>
